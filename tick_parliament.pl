@@ -1,9 +1,9 @@
 use 5.010;
 use strict;
-use lib '/data/Lacuna-Server/lib';
-use Lacuna::DB;
-use Lacuna;
-use Lacuna::Util qw(randint format_date);
+use lib '/home/keno/ka-server/lib';
+use KA::DB;
+use KA;
+use KA::Util qw(randint format_date);
 use Getopt::Long;
 $|=1;
 our $quiet;
@@ -16,10 +16,10 @@ out('Started');
 my $start = time;
 
 out('Loading DB');
-our $db = Lacuna->db;
+our $db = KA->db;
 
 out('Ticking parliament');
-my $propositions_rs = $db->resultset('Lacuna::DB::Result::Propositions');
+my $propositions_rs = $db->resultset('Proposition');
 my $dtf = $db->storage->datetime_parser;
 my @propositions = $propositions_rs->search({ status => 'Pending', date_ends => { '<' => $dtf->format_datetime(DateTime->now)} })->get_column('id')->all;
 foreach my $id (@propositions) {

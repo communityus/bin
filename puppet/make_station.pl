@@ -1,9 +1,9 @@
 use 5.010;
 use strict;
-use lib '/data/Lacuna-Server/lib';
-use Lacuna::DB;
-use Lacuna;
-use Lacuna::Util qw(randint format_date);
+use lib '/home/keno/ka-server/lib';
+use KA::DB;
+use KA;
+use KA::Util qw(randint format_date);
 use Getopt::Long;
 use JSON;
 $|=1;
@@ -26,16 +26,16 @@ our $quiet;
   my $start = time;
 
   out('Loading DB');
-  our $db = Lacuna->db;
+  our $db = KA->db;
 
-  my $empires = $db->resultset('Lacuna::DB::Result::Empire');
+  my $empires = $db->resultset('Empire');
   my $empire = $empires->find($empire_id);
   unless (defined($empire)) {
     die "Empire: $empire_id does not exist\n";
   }
   out (sprintf("Setting up for empire: %s:%s", $empire_id, $empire->name));
 
-  my $body = $db->resultset('Lacuna::DB::Result::Map::Body')->find($body_id);
+  my $body = $db->resultset('Map::Body')->find($body_id);
   print "Found body!\n";
   unless ($body) {
     die "Cannot find body id $body_id\n";
@@ -45,7 +45,7 @@ our $quiet;
     die;
   }
   if ($body->get_type ne "habitable planet") {
-    $body->class('Lacuna::DB::Result::Map::Body::Planet::P1');
+    $body->class('KA::DB::Result::Map::Body::Planet::P1');
   }
   
   $body->convert_to_station($empire);
@@ -67,7 +67,7 @@ our $quiet;
   say "Adding to ".$body->name;
   for my $build (@$builds) {
     next if ($build->{level} < 1 or $build->{level} > 30);
-    my $bld = Lacuna->db->resultset('Lacuna::DB::Result::Building')->new({
+    my $bld = KA->db->resultset('Building')->new({
         body_id  => $body->id,
         x        => $build->{x},
         y        => $build->{y},
@@ -82,10 +82,10 @@ our $quiet;
   $body->needs_recalc(1);
   $body->update;
   $body->tick;
-  $body->energy_stored($body->energy_capacity);
-  $body->water_stored($body->water_capacity);
-  $body->pie_stored($body->food_capacity);
-  $body->magnetite_stored($body->ore_capacity);
+  $body->set_stored('energy', $body->energy_capacity);
+  $body->set_stored('water', $body->water_capacity);
+  $body->set_stored('pie', $body->food_capacity);
+  $body->set_stored('magnetite', $body->ore_capacity);
   $body->needs_surface_refresh(1);
   $body->needs_recalc(1);
   $body->update;

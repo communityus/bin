@@ -1,12 +1,12 @@
 use 5.010;
 use strict;
-use lib '/data/Lacuna-Server/lib';
-use Lacuna::DB;
-use Lacuna;
-use Lacuna::Util qw(format_date);
+use lib '/home/keno/ka-server/lib';
+use KA::DB;
+use KA;
+use KA::Util qw(format_date);
 use Getopt::Long;
 use JSON;
-use Lacuna::Constants qw(SHIP_TYPES ORE_TYPES);
+use KA::Constants qw(SHIP_TYPES ORE_TYPES);
 use utf8;
 
 
@@ -22,7 +22,7 @@ use utf8;
   my $start = DateTime->now;
 
   out('Loading DB');
-  our $db = Lacuna->db;
+  our $db = KA->db;
 
   summarize_colonies();
   my $mapping = summarize_empires();
@@ -49,12 +49,12 @@ sub generate_overview {
     my $stars       = $db->resultset('Map::Star');
     my $bodies      = $db->resultset('Map::Body');
     my @off_limits  = $bodies->search({empire_id => {'<' => 2}})->get_column('id')->all;
-    my $ships       = $db->resultset('Ships')->search({body_id => { 'not in' => \@off_limits}});
+    my $ships       = $db->resultset('Fleet')->search({body_id => { 'not in' => \@off_limits}});
     my $glyphs      = $db->resultset('Glyph')->search({body_id => { 'not in' => \@off_limits}});
     my $buildings   = $db->resultset('Building')->search({body_id => { 'not in' => \@off_limits}});
     my $empires     = $db->resultset('Empire')->search({id => { '>' => 1}});
     # Get all probes, either observatory or oracle
-    my $probes      = $db->resultset('Probes')->search({empire_id => { '>' => 1} });
+    my $probes      = $db->resultset('Probe')->search({empire_id => { '>' => 1} });
     my $dtformatter = $db->storage->datetime_parser;
     
     # basics
@@ -93,10 +93,10 @@ sub generate_overview {
     # flesh out bodies
     out('Flesh Out Body Stats');
     my %body_types = (
-        gas_giants  => 'Lacuna::DB::Result::Map::Body::Planet::GasGiant%',
-        habitables  => 'Lacuna::DB::Result::Map::Body::Planet::P%',
-        stations    => 'Lacuna::DB::Result::Map::Body::Planet::Station',
-        asteroids   => 'Lacuna::DB::Result::Map::Body::Asteroid%',
+        gas_giants  => 'KA::DB::Result::Map::Body::Planet::GasGiant%',
+        habitables  => 'KA::DB::Result::Map::Body::Planet::P%',
+        stations    => 'KA::DB::Result::Map::Body::Planet::Station',
+        asteroids   => 'KA::DB::Result::Map::Body::Asteroid%',
     );
     foreach my $key (keys %body_types) {
         out($key);
@@ -164,7 +164,7 @@ sub generate_overview {
         $out{glyphs}{types}{$glyph->type} = $glyph->quantity;
     }
 
-    my $config = Lacuna->config;
+    my $config = KA->config;
     if ($config->get('access_key')) {
         require SOAP::Amazon::S3;
 
@@ -184,14 +184,14 @@ sub generate_overview {
     {
         my $read;
 
-        if (-e '/data/Lacuna-Server/var/www/public/server_overview.json')
+        if (-e '/home/keno/ka-server/var/www/public/server_overview.json')
         {
-            open my $read, '<', '/data/Lacuna-Server/var/www/public/server_overview.json';
+            open my $read, '<', '/home/keno/ka-server/var/www/public/server_overview.json';
             my $old_stats = from_json(do { local $/; <$read> });
             $out{spies} = $old_stats->{spies};
         }
 
-        open my $fh, '>', '/data/Lacuna-Server/var/www/public/server_overview.json';
+        open my $fh, '>', '/home/keno/ka-server/var/www/public/server_overview.json';
         print $fh to_json(\%out);
         close $fh;
     }
@@ -438,7 +438,7 @@ sub summarize_colonies {
     out('Summarizing Planets');
     my $logs = $db->resultset('Log::Colony');
     my $planets = $db->resultset('Map::Body')->search({ empire_id   => {'>' => 1} },{order_by => 'name'});
-    my $spy_logs = $db->resultset('Log::Spies');
+    my $spy_logs = $db->resultset('Log::Spy');
     while (my $planet = $planets->next) {
         out($planet->name);
         my $log = $logs->search({planet_id => $planet->id})->first;
@@ -499,7 +499,7 @@ sub output_map {
 #  print OUT $map_txt;
 #  close(OUT);
   my %output;
-  my $star_map_size = Lacuna->config->get('map_size');
+  my $star_map_size = KA->config->get('map_size');
   $output{map} = {
     bounds => $star_map_size,
   };
@@ -533,7 +533,7 @@ sub output_map {
   }
   my $json_txt = JSON->new->utf8->encode(\%output);
 
-  my $config = Lacuna->config;
+  my $config = KA->config;
   if ($config->get('access_key')) {
       require SOAP::Amazon::S3;
 
@@ -545,7 +545,7 @@ sub output_map {
   }
     else
     {
-        open my $fh, '>', '/data/Lacuna-Server/var/www/public/starmap.json';
+        open my $fh, '>', '/home/keno/ka-server/var/www/public/starmap.json';
         print $fh $json_txt;
         close $fh;
     }

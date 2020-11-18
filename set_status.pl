@@ -1,8 +1,8 @@
 use 5.010;
 use strict;
-use lib '/data/Lacuna-Server/lib';
+use lib '/home/keno/ka-server/lib';
 use Getopt::Long;
-use Lacuna::Cache;
+use KA::Cache;
 use Config::JSON;
 $|=1;
 our $online;
@@ -14,8 +14,8 @@ GetOptions(
     'gameover'      => \$gameover,
 );
 
-my $config = Config::JSON->new('/data/Lacuna-Server/etc/lacuna.conf');
-my $cache = Lacuna::Cache->new(servers => $config->get('memcached'));
+my $config = Config::JSON->new('/home/keno/ka-server/etc/reboot.conf');
+my $cache = KA::Cache->new(servers => $config->get('memcached'));
 
 if ($online) {
     say "Setting Online...";

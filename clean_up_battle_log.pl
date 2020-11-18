@@ -1,11 +1,11 @@
 use 5.010;
 use strict;
 use feature "switch";
-use lib '/data/Lacuna-Server/lib';
-use Lacuna::DB;
-use Lacuna;
+use lib '/home/keno/ka-server/lib';
+use KA::DB;
+use KA;
 use List::Util qw(shuffle);
-use Lacuna::Util qw(randint format_date);
+use KA::Util qw(randint format_date);
 use Getopt::Long;
 $|=1;
 our $quiet;
@@ -19,11 +19,11 @@ my $start = time;
 my $date_ended = DateTime->now->subtract( days => 30 );
 
 out('Loading DB');
-our $db = Lacuna->db;
+our $db = KA->db;
 our $dtf = $db->storage->datetime_parser;
 
 out('Deleting Old Battle Logs');
-my $log = $db->resultset('Lacuna::DB::Result::Log::Battles');
+my $log = $db->resultset('Log::Battles');
 $log->search({ date_stamp => { '<' => $dtf->format_datetime($date_ended) }})->delete_all;
 
 my $finish = time;

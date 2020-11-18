@@ -1,9 +1,9 @@
 use 5.010;
 use strict;
-use lib '/data/Lacuna-Server/lib';
-use Lacuna::DB;
-use Lacuna;
-use Lacuna::Util qw(randint format_date);
+use lib '/home/keno/ka-server/lib';
+use KA::DB;
+use KA;
+use KA::Util qw(randint format_date);
 use Getopt::Long;
 use AnyEvent;
 $|=1;
@@ -33,12 +33,12 @@ if ($randomize) {
 
 
 out('Loading DB');
-our $db = Lacuna->db;
+our $db = KA->db;
 our $empires = $db->resultset('Empire');
-our $spies = $db->resultset('Spies');
-our $ships = $db->resultset('Ships');
+our $spies = $db->resultset('Spy');
+our $ships = $db->resultset('Fleet');
 our $targets = $db->resultset('SabenTarget');
-my $config = Lacuna->config;
+my $config = KA->config;
 
 out('getting empires...');
 my $saben = $empires->find(-1);
@@ -118,7 +118,7 @@ sub start_attack {
     my ($saben_colony, $target_colony) = @_;
     out('Looking for probes...');
     my $attack = AnyEvent->condvar;
-    my $count = $db->resultset('Probes')->search_any({ empire_id => -1, star_id => $target_colony->star_id })->count;
+    my $count = $db->resultset('Probe')->search_any({ empire_id => -1, star_id => $target_colony->star_id })->count;
     if ($count) {
         out('Has one at star already...');
         my $timer = AnyEvent->timer(

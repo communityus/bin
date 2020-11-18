@@ -1,6 +1,6 @@
 use 5.10.0;
 use strict;
-use lib '/data/Lacuna-Server/lib';
+use lib '/home/keno/ka-server/lib';
 use Getopt::Long;
 
 use L;
@@ -13,7 +13,7 @@ out("Started");
 
 my $rs = LD->bodies(
                     {
-                        class => 'Lacuna::DB::Result::Map::Body::Planet::Station',
+                        class => 'KA::DB::Result::Map::Body::Planet::Station',
                     }
                    );
 

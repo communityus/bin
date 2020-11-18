@@ -1,9 +1,9 @@
 use 5.010;
 use strict;
-use lib '/data/Lacuna-Server/lib';
-use Lacuna::DB;
-use Lacuna;
-use Lacuna::Util qw(format_date);
+use lib '/home/keno/ka-server/lib';
+use KA::DB;
+use KA;
+use KA::Util qw(format_date);
 use Getopt::Long;
 
 $|=1;
@@ -18,12 +18,13 @@ GetOptions(
 out('Started');
 my $start = time;
 out('Loading DB');
-our $db = Lacuna->db;
-my $config = Lacuna->config;
-my $empires = $db->resultset('Lacuna::DB::Result::Empire');
-my $ai = Lacuna::AI::Jackpot->new;
-my $viable_colonies = $db->resultset('Lacuna::DB::Result::Map::Body')->search(
-                { zone => '0|0', empire_id => undef, size => { between => [40,60]}},
+our $db = KA->db;
+my $config = KA->config;
+my $empires = $db->resultset('Empire');
+my $ai = KA::AI::Jackpot->new;
+my $viable_colonies = $db->resultset('Map::Body')->search(
+                { zone => '0|0', empire_id => undef, size => { between => [40,60]},
+                  x => { between => [-50,50]}, y => {between => [-50,50]}},
                 { rows => 1, order_by => 'rand()' }
                 );
 my $jackpot = $empires->find(-4);

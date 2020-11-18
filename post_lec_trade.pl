@@ -1,14 +1,14 @@
 use 5.10.0;
 use strict;
-use lib '/data/Lacuna-Server/lib';
+use lib '/home/keno/ka-server/lib';
 use Getopt::Long;
 use List::Util qw(all);
 
-BEGIN { $Lacuna::Role::Trader::overload_allowed = 1 }
+BEGIN { $KA::Role::Trader::overload_allowed = 1 }
 
 use L;
 use Module::Find;
-use Lacuna::Constants qw(ORE_TYPES SHIP_TYPES);
+use KA::Constants qw(ORE_TYPES SHIP_TYPES);
 
 use Data::Dump qw(dump);
 
@@ -49,10 +49,10 @@ USAGE
 
 out("Started");
 
-my $trade_type = 'Lacuna::DB::Result::Building::' . ( $sst ? 'Transporter' : 'Trade' );
+my $trade_type = 'KA::DB::Result::Building::' . ( $sst ? 'Transporter' : 'Trade' );
 my $trade_ships_required = $sst ? 0 : 1;
 my $trade = LD->building({"me.class" => $trade_type, "body.empire_id"=>1},{join => "body"});
-my $yard  = LD->building({"me.class" => 'Lacuna::DB::Result::Building::Shipyard', 'me.level'=>30,"body.empire_id"=>1},{join => "body"});
+my $yard  = LD->building({"me.class" => 'KA::DB::Result::Building::Shipyard', 'me.level'=>30,"body.empire_id"=>1},{join => "body"});
 my $body = $trade->body;
 
 # track all ship types and their defaults
@@ -127,7 +127,7 @@ my @offer;
 my @valid_plans;
 for my $p (@plans)
 {
-    @valid_plans = findallmod 'Lacuna::DB::Result::Building'
+    @valid_plans = findallmod 'KA::DB::Result::Building'
         unless @valid_plans;
 
     my ($quantity,$class,$level,$extra_build_level) =
@@ -300,7 +300,7 @@ sub build_ship
     my $body = shift;
     my $type = shift;
     my %params = @_;
-    my $ship = LD->resultset('Ships')->new({type => $type, %params});
+    my $ship = LD->resultset('Fleet')->new({type => $type, %params});
     $ship->body($body);
     $ship->date_started(DateTime->now);
     $ship->date_available(DateTime->now);

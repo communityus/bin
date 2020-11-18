@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use lib '/data/Lacuna-Server/lib';
+use lib '/home/keno/ka-server/lib';
 use L;
 use List::Util qw(sum);
 use Getopt::Long;
@@ -20,11 +20,11 @@ my $bodies = LD->resultset('Map::Body')
     ->search(
              {
                  'me.notes' => { like => '%pyramid31%' },
-                 '_plans.class' => 'Lacuna::DB::Result::Building::Permanent::PyramidJunkSculpture',
+                 '_plans.class' => 'KA::DB::Result::Building::Permanent::PyramidJunkSculpture',
                  '_plans.level' => 31,
                  '_plans.extra_build_level' => 0,
                  '_plans.quantity' => { '>' => 0 },
-                 '_buildings.class' => 'Lacuna::DB::Result::Building::Permanent::PyramidJunkSculpture',
+                 '_buildings.class' => 'KA::DB::Result::Building::Permanent::PyramidJunkSculpture',
                  '_buildings.level' => 30,
              },
              {

@@ -1,10 +1,10 @@
 use 5.010;
 use strict;
 use feature "switch";
-use lib '/data/Lacuna-Server/lib';
-use Lacuna::DB;
-use Lacuna;
-use Lacuna::Util qw(randint format_date);
+use lib '/home/keno/ka-server/lib';
+use KA::DB;
+use KA;
+use KA::Util qw(randint format_date);
 use Getopt::Long;
 use DateTime;
 $|=1;
@@ -19,7 +19,7 @@ out('Started');
 my $start = time;
 
 out('Loading DB');
-our $db = Lacuna->db;
+our $db = KA->db;
 my $now = DateTime->now;
 
 my $empire = 

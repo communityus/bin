@@ -1,10 +1,10 @@
 use 5.010;
 use strict;
 use feature "switch";
-use lib '/data/Lacuna-Server/lib';
-use Lacuna::DB;
-use Lacuna;
-use Lacuna::Util qw(randint format_date);
+use lib '/home/keno/ka-server/lib';
+use KA::DB;
+use KA;
+use KA::Util qw(randint format_date);
 use Getopt::Long;
 use DateTime;
 $|=1;
@@ -17,13 +17,13 @@ out('Started');
 my $start = time;
 
 out('Loading DB');
-our $db = Lacuna->db;
+our $db = KA->db;
 my $now = DateTime->now;
 
 out('Complete all trades in progress, delete all others');
 
 out('Zip all ships to their destination');
-my $ships = $db->resultset('Ships')->search({
+my $ships = $db->resultset('Fleet')->search({
     task => 'Travelling'
 });
 while (my $ship = $ships->next) {

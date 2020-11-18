@@ -1,12 +1,12 @@
 use 5.010;
 use strict;
-use lib '/data/Lacuna-Server/lib';
-use Lacuna::DB;
-use Lacuna;
-use Lacuna::Util qw(format_date);
+use lib '/home/keno/ka-server/lib';
+use KA::DB;
+use KA;
+use KA::Util qw(format_date);
 use Getopt::Long;
 use JSON;
-use Lacuna::Constants qw(SHIP_TYPES);
+use KA::Constants qw(SHIP_TYPES);
 use utf8;
 
 
@@ -22,7 +22,7 @@ use utf8;
   my $start = DateTime->now;
 
   out('Loading DB');
-  our $db = Lacuna->db;
+  our $db = KA->db;
 
   summarize_spies();
   delete_old_records($start);
@@ -41,7 +41,7 @@ exit;
 
 sub generate_overview {
     out('Generating Overview');
-    my $spies       = $db->resultset('Lacuna::DB::Result::Spies')->search({empire_id => { '>' => 1}});
+    my $spies       = $db->resultset('Spy')->search({empire_id => { '>' => 1}});
     
     # basics
     out('Getting Basic Counts');
@@ -94,7 +94,7 @@ sub generate_overview {
         },
     );
 
-    my $config = Lacuna->config;
+    my $config = KA->config;
     if ($config->get('access_key')) {
         require SOAP::Amazon::S3;
 
@@ -119,14 +119,14 @@ sub generate_overview {
     else
     {
         my $stats = {};
-        if (-e '/data/Lacuna-Server/var/www/public/server_overview.json')
+        if (-e '/home/keno/ka-server/var/www/public/server_overview.json')
         {
-            open my $read, '<', '/data/Lacuna-Server/var/www/public/server_overview.json';
+            open my $read, '<', '/home/keno/ka-server/var/www/public/server_overview.json';
             $stats = from_json(do { local $/; <$read> });
         }
         $stats->{spies} = $out{spies};
 
-        open my $fh, '>', '/data/Lacuna-Server/var/www/public/server_overview.json';
+        open my $fh, '>', '/home/keno/ka-server/var/www/public/server_overview.json';
         print $fh to_json(\%out);
         close $fh;
 
@@ -136,7 +136,16 @@ sub generate_overview {
 
 sub rank_spies {
     out('Ranking Spies');
-    my $spies = $db->resultset('Lacuna::DB::Result::Log::Spies');
+
+
+    # @rank=0;
+    # update spy_log set level_rank=(@rank:=@rank+1) order by level desc;
+    # @rank=0;
+    # update spy_log set success_rate_rank=(@rank:=@rank+1) order by success_rate desc;
+    # @rank=0;
+    # update spy_log set dirtiest_rank=(@rank:=@rank+1) order by dirtiest desc;
+    #
+    my $spies = $db->resultset('Log::Spy');
     foreach my $field (qw(level success_rate dirtiest)) {
         my $ranked = $spies->search(undef, {order_by => {-desc => $field}});
         my $counter = 1;
@@ -148,23 +157,34 @@ sub rank_spies {
 
 sub delete_old_records {
     out('Deleting old records');
+
+    # delete spy_log where not exists(select 1 from spy_log,spies where spy_log.spy_id = spies.id);
+    # 
+
     my $start = shift;
-    $db->resultset('Lacuna::DB::Result::Log::Spies')->search({date_stamp => { '<' => $start}})->delete;
+    $db->resultset('Log::Spy')->search({date_stamp => { '<' => $start}})->delete;
 }
 
 
 
 sub summarize_spies {
     out('Summarizing Spies');
-    my $spies = $db->resultset('Lacuna::DB::Result::Spies')->search({ empire_id   => {'>' => 1} });
-    my $logs = $db->resultset('Lacuna::DB::Result::Log::Spies');
+
+    # For the set of spies where there is no previous spy_log
+    # select id from spies where empire_id > 1 and not exists(select 1 from spy_log where spy_log.spy_id = spies.id);
+    #
+    # For the set of spies where there *is* a previous spy_log
+    # select id from spies,spy_log where empire_id > 1 and spy_log.spy_id = spies.id;
+    # 
+    my $spies = $db->resultset('Spy')->search({ empire_id   => {'>' => 1} });
+    my $logs = $db->resultset('Log::Spy');
     while (my $spy = $spies->next) {
         out($spy->id.":".$spy->name);
         my $log = $logs->search({ spy_id => $spy->id } )->first;
         my $offense_success_rate = ($spy->offense_mission_count) ? 100 * $spy->offense_mission_successes / $spy->offense_mission_count : 0;
         my $defense_success_rate = ($spy->defense_mission_count) ? 100 * $spy->defense_mission_successes / $spy->defense_mission_count : 0;
         my $success_rate = $offense_success_rate + $defense_success_rate;
-        my $planet = $db->resultset('Lacuna::DB::Result::Map::Body')->find($spy->from_body_id);
+        my $planet = $db->resultset('Map::Body')->find($spy->from_body_id);
         next unless defined $planet;
         my %spy_data = (
             date_stamp                  => DateTime->now,
@@ -194,7 +214,7 @@ sub summarize_spies {
             empire_id                   => $spy->empire_id,
             empire_name                 => $spy->empire->name,
         );
-        if (defined $log) {
+        if ($log) {
             $spy_data{dirtiest_delta}               = $spy_data{dirtiest} - $log->dirtiest + $log->dirtiest_delta;
             $spy_data{level_delta}                  = $spy->level - $log->level;
             $spy_data{defense_success_rate_delta}   = $defense_success_rate - $log->defense_success_rate + $log->defense_success_rate_delta;
@@ -204,6 +224,7 @@ sub summarize_spies {
         }
         else {
             $spy_data{spy_id}       = $spy->id;
+            out("Creating [".$spy_data{spy_id}."]");
             $logs->new(\%spy_data)->insert;
         }
     }

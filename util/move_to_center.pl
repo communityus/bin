@@ -1,9 +1,9 @@
 use 5.010;
 use strict;
-use lib '/data/Lacuna-Server/lib';
-use Lacuna::DB;
-use Lacuna;
-use Lacuna::Util qw(randint format_date);
+use lib '/home/keno/ka-server/lib';
+use KA::DB;
+use KA;
+use KA::Util qw(randint format_date);
 use Getopt::Long;
 use List::MoreUtils qw(uniq);
 $|=1;
@@ -22,10 +22,10 @@ out('Started');
 my $start = time;
 
 out('Loading DB');
-our $db = Lacuna->db;
-my $bodies = $db->resultset('Lacuna::DB::Result::Map::Body');
-my $stars = $db->resultset('Lacuna::DB::Result::Map::Star');
-my $empire = $db->resultset('Lacuna::DB::Result::Empire');
+our $db = KA->db;
+my $bodies = $db->resultset('Map::Body');
+my $stars = $db->resultset('Map::Star');
+my $empire = $db->resultset('Empire');
 
 out('Figuring out which stars need to be moved...');
 my @stars_to_move = $bodies->search({

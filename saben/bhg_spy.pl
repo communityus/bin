@@ -1,11 +1,11 @@
 use 5.010;
 use strict;
-use lib '/data/Lacuna-Server/lib';
+use lib '/home/keno/ka-server/lib';
 use Data::Dumper;
 use DateTime;
-use Lacuna::DB;
-use Lacuna;
-use Lacuna::Util qw(randint format_date random_element);
+use KA::DB;
+use KA;
+use KA::Util qw(randint format_date random_element);
 use List::Util 'shuffle';
 use Getopt::Long;
 $|=1;
@@ -31,7 +31,7 @@ out('Started');
 my $start = time;
 
 out('Loading DB');
-our $db = Lacuna->db;
+our $db = KA->db;
 
 my $saben =  $db->resultset('Empire')->find(-1);
 
@@ -42,7 +42,7 @@ out("");
 # Find planets with BHG
 my $dtf = $db->storage->datetime_parser;
 my %has_bhg = map { $_->body_id => 1 } $db->resultset('Building')->search({
-     class => 'Lacuna::DB::Result::Building::Permanent::BlackHoleGenerator',
+     class => 'KA::DB::Result::Building::Permanent::BlackHoleGenerator',
      })->all;
 
 my $num_body = scalar keys %has_bhg;
@@ -64,14 +64,14 @@ for my $body_id (sort keys %has_bhg) {
         next;
     }
 
-    my @bhgs = $body->get_buildings_of_class('Lacuna::DB::Result::Building::Permanent::BlackHoleGenerator');
+    my @bhgs = $body->get_buildings_of_class('KA::DB::Result::Building::Permanent::BlackHoleGenerator');
 
     unless (scalar @bhgs) {
         out('How did we lose the bhg already?');
         next;
     }
     my $elevel = $body->empire->university_level;
-    my $spy = $db->resultset('Spies')->new({
+    my $spy = $db->resultset('Spy')->new({
            from_body_id    => $saben->home_planet_id,
            on_body_id      => $body_id,
            task            => 'Sabotage BHG',

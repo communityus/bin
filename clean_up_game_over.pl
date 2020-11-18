@@ -1,13 +1,13 @@
 use 5.010;
 use strict;
 use feature "switch";
-use lib '/data/Lacuna-Server/lib';
-use Lacuna::DB;
-use Lacuna;
+use lib '/home/keno/ka-server/lib';
+use KA::DB;
+use KA;
 use List::Util qw(shuffle);
-use Lacuna::Util qw(randint format_date);
+use KA::Util qw(randint format_date);
 use Config::JSON;
-use Lacuna::Cache;
+use KA::Cache;
 use Getopt::Long;
 $|=1;
 our $quiet;
@@ -20,8 +20,8 @@ out('Started');
 my $start = DateTime->now;
 
 out('Checking server status');
-my $config = Config::JSON->new('/data/Lacuna-Server/etc/lacuna.conf');
-my $cache = Lacuna::Cache->new(servers => $config->get('memcached'));
+my $config = Config::JSON->new('/home/keno/ka-server/etc/reboot.conf');
+my $cache = KA::Cache->new(servers => $config->get('memcached'));
 my $status = $cache->get('server','status');
 unless ( $status eq 'Game Over' ) {
     out('Server status is ' . $status);
@@ -29,8 +29,8 @@ unless ( $status eq 'Game Over' ) {
 }
 
 out('Loading DB');
-our $db = Lacuna->db;
-my $empires = $db->resultset('Lacuna::DB::Result::Empire')->search({id => { '>' => 1 } });
+our $db = KA->db;
+my $empires = $db->resultset('Empire')->search({id => { '>' => 1 } });
 
 out('Deleting Empires');
 while (my $empire = $empires->next) {

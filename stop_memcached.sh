@@ -1,4 +1,4 @@
 #!/bin/bash
 export PATH=/data/apps/bin:$PATH
-cd /data/Lacuna-Server/bin
+cd /home/keno/ka-server/bin
 killall memcached
